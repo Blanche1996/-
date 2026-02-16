@@ -15,7 +15,7 @@ const App: React.FC = () => {
   const [scene, setScene] = useState<GameScene>(GameScene.SELECTION);
   const [selectedBuddhaIdx, setSelectedBuddhaIdx] = useState(0);
   const [settings, setSettings] = useState<AppSettings>({
-    targetHits: 10,
+    targetHits: 3,
     customImages: {}
   });
   const [baZiData, setBaZiData] = useState<BaZiResult | null>(null);
@@ -26,7 +26,10 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const saved = localStorage.getItem('ZEN_TEMPLE_SETTINGS');
-    if (saved) setSettings(JSON.parse(saved));
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setSettings(parsed);
+    }
   }, []);
 
   const saveSettings = (newSettings: AppSettings) => {
@@ -87,12 +90,9 @@ const App: React.FC = () => {
     ctx.font = 'bold 54px "Noto Serif SC"';
     ctx.fillText(`${data.dayPillar}日 · ${data.type}`, 540, 840);
 
-    // 6. 箴言渲染 (重点优化区域)
+    // 6. 箴言渲染
     const lines = data.oracle.split('\n');
     const maxLineLength = Math.max(...lines.map(l => l.length));
-    
-    // 动态计算字体和间距
-    // 如果字数超过8个，缩小字体以防超出
     const fontSize = maxLineLength > 8 ? 75 : 90;
     const charSpacing = fontSize * 1.25; 
     const lineSpacing = fontSize * 1.5;
@@ -102,13 +102,12 @@ const App: React.FC = () => {
 
     const totalBlockWidth = (lines.length - 1) * lineSpacing;
     const startX = 540 + (totalBlockWidth / 2);
-    const startY = 980; // 从日柱信息下方开始
+    const startY = 980;
 
     lines.forEach((line, lineIdx) => {
         const x = startX - (lineIdx * lineSpacing);
         for(let charIdx = 0; charIdx < line.length; charIdx++) {
             const y = startY + (charIdx * charSpacing);
-            // 确保不超出页脚范围 (1750)
             if (y < 1750) {
               ctx.fillText(line[charIdx], x, y);
             }

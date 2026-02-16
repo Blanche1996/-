@@ -17,9 +17,10 @@ const RhythmGame: React.FC<RhythmGameProps> = ({ target, onWin, buddhaColor }) =
   const directionRef = useRef<number>(1);
   const rippleIdRef = useRef(0);
 
-  const speed = 0.25; 
+  // 速度 0.07：极度舒缓，给予用户充分的反应时间
+  const speed = 0.07; 
 
-  const animate = useCallback((time: number) => {
+  const animate = useCallback(() => {
     setCursorPos(prev => {
       let next = prev + (directionRef.current * speed * 10);
       if (next >= 100) {
@@ -46,7 +47,8 @@ const RhythmGame: React.FC<RhythmGameProps> = ({ target, onWin, buddhaColor }) =
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    if (cursorPos >= 40 && cursorPos <= 60) {
+    // 区间包含判定 (35% - 65%)：游标中心点落在区间内即算成功
+    if (cursorPos >= 35 && cursorPos <= 65) {
       const nextHits = hits + 1;
       setHits(nextHits);
       audioService.playWoodenFish();
@@ -58,7 +60,7 @@ const RhythmGame: React.FC<RhythmGameProps> = ({ target, onWin, buddhaColor }) =
       }, 800);
 
       if (nextHits >= target) {
-        onWin();
+        setTimeout(onWin, 600);
       }
     } else {
       audioService.playError();
@@ -67,7 +69,47 @@ const RhythmGame: React.FC<RhythmGameProps> = ({ target, onWin, buddhaColor }) =
 
   return (
     <div className="zen-card no-shadow cursor-pointer overflow-hidden" onClick={handleHit}>
-      {/* 墨晕层 */}
+      <div className="text-center mb-12">
+        <p className="text-[10px] font-print uppercase tracking-[0.4em] mb-1" style={{ color: 'var(--accent-blue)' }}>Rhythm of Mindfulness</p>
+        <h2 className="text-xl font-print">敲击木鱼</h2>
+        <div className="text-[10px] opacity-30 mt-2 tracking-widest font-print">功德进益: {hits} / {target}</div>
+      </div>
+
+      <div className="flex-1 flex flex-col items-center justify-center w-full relative">
+        {/* 背景节奏条 */}
+        <div className="relative w-full h-8 bg-black/5 rounded-full overflow-hidden border border-black/5">
+          {/* 成功判定区 */}
+          <div 
+            className="absolute h-full transition-opacity duration-300"
+            style={{ 
+              left: '35%', 
+              width: '30%', 
+              backgroundColor: buddhaColor, 
+              opacity: 0.15 
+            }}
+          ></div>
+          
+          <div className="absolute left-[35%] h-full w-[1px] bg-black/10"></div>
+          <div className="absolute left-[65%] h-full w-[1px] bg-black/10"></div>
+
+          {/* 移动游标 */}
+          <div 
+            className="absolute h-full w-1 bg-black shadow-[0_0_10px_rgba(0,0,0,0.3)] z-10"
+            style={{ left: `${cursorPos}%`, transform: 'translateX(-50%)' }}
+          ></div>
+        </div>
+        
+        <div className="mt-12 opacity-20 transform scale-150 grayscale select-none pointer-events-none">
+          <svg width="80" height="64" viewBox="0 0 80 64">
+            <path d="M40 10 Q70 10 70 32 Q70 54 40 54 Q10 54 10 32 Q10 10 40 10" fill="none" stroke="black" strokeWidth="2" />
+            <path d="M20 32 Q40 40 60 32" fill="none" stroke="black" strokeWidth="1" />
+          </svg>
+        </div>
+        
+        <p className="mt-8 text-xs font-print opacity-30 tracking-[0.4em]">于中正之时 叩响清音</p>
+      </div>
+
+      {/* 视觉墨染反馈 */}
       <div className="absolute inset-0 pointer-events-none">
         {ripples.map(r => (
           <div 
@@ -78,41 +120,7 @@ const RhythmGame: React.FC<RhythmGameProps> = ({ target, onWin, buddhaColor }) =
         ))}
       </div>
 
-      {/* 天 - 标题 */}
-      <div className="text-center mb-8">
-        <p className="text-[10px] font-print uppercase tracking-[0.4em] mb-1" style={{ color: 'var(--accent-blue)' }}>Mokugyo Ritual</p>
-        <h2 className="text-xl font-print">敲击墨染木鱼</h2>
-      </div>
-
-      {/* 人 - 核心内容 */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full">
-        {/* 白描风格木鱼 */}
-        <div className="relative w-48 h-48 mb-12">
-          <svg viewBox="0 0 100 100" className="w-full h-full" style={{ fill: 'none', stroke: 'var(--ink-text)', strokeWidth: '1' }}>
-            <path d="M50 15 C80 15 95 40 95 65 C95 85 80 95 50 95 C20 95 5 85 5 65 C5 40 20 15 50 15" />
-            <path d="M30 60 Q50 45 70 60" opacity="0.3" />
-            <path d="M35 75 Q50 65 65 75" opacity="0.2" />
-            {/* 木鱼开口线 */}
-            <path d="M15 65 H85" opacity="0.1" />
-          </svg>
-        </div>
-
-        {/* 节奏条 - 极简线框 */}
-        <div className="w-full h-8 relative flex items-center mb-4">
-          <div className="absolute inset-x-0 h-[1px] bg-black opacity-10"></div>
-          {/* 判定区 */}
-          <div className="absolute left-[40%] right-[40%] h-full border-x border-black opacity-20"></div>
-          {/* 指针 */}
-          <div 
-            className="absolute w-[2px] h-full bg-black z-10"
-            style={{ left: `${cursorPos}%`, transition: 'none' }}
-          ></div>
-        </div>
-        <p className="font-print text-sm opacity-40">于中心处叩首: {hits} / {target}</p>
-      </div>
-
-      {/* 地 - 印章 */}
-      <div className="seal">了凡</div>
+      <div className="seal">积德</div>
     </div>
   );
 };
